@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -13,8 +14,7 @@ public class SortMaker : MonoBehaviour
     public float updateInterval = 0.01f;
     public GameObject prefab;
 
-    List<GameObject> bars = new List<GameObject>();
-    void SetUp(int range, float interval = 0)
+    void SetUp(List<GameObject> bars, int range, float interval = 0, float upperY = 0)
     {
         /*make height list*/
         List<float> list = new List<float>();
@@ -38,7 +38,7 @@ public class SortMaker : MonoBehaviour
 
             newObject.transform.parent = null;
             newObject.transform.localScale = new Vector2(1, r);
-            newObject.transform.position = new Vector2(x, ((float)r - 1) / 2);
+            newObject.transform.position = new Vector2(x, ((float)r - 1) / 2 + upperY);
             //Debug.Log(-newObject.transform.localScale.y);
 
             bars.Add(newObject);
@@ -51,13 +51,11 @@ public class SortMaker : MonoBehaviour
 
     void Start()
     {
-
-        //MergeSort(range, barInterval);
-
-        BubbleSort(range, barInterval);
+        BubbleSort(range, barInterval, 150);
+        MergeSort(range, barInterval);
     }
 
-    void Swap(int index1, int index2)
+    void Swap(List<GameObject> bars, int index1, int index2)
     {
         float tempCoorX = bars[index1].transform.position.x;
         bars[index1].transform.position = new Vector2(bars[index2].transform.position.x, bars[index1].transform.position.y);
@@ -68,7 +66,7 @@ public class SortMaker : MonoBehaviour
         bars[index2] = temp;
     }
 
-    IEnumerator CheckArray(float second, int i = 0)
+    IEnumerator CheckArray(List<GameObject> bars, float second, int i = 0)
     {
         yield return new WaitForSeconds(second);
 
@@ -78,14 +76,15 @@ public class SortMaker : MonoBehaviour
             changeColor.color = Color.green;
             i++;
 
-            StartCoroutine(CheckArray(second,i));
+            StartCoroutine(CheckArray(bars, second,i));
         }
     }
     
-    void MergeSort(int barLenghtRange, float barIncerese)
+    void MergeSort(int barLenghtRange, float barIncerese, float upperY = 0)
     {
         /*Generate Bars*/
-        SetUp(range, barIncerese);
+        List<GameObject> bars = new List<GameObject>();
+        SetUp(bars, range, barIncerese, upperY);
 
         /*Set up merge parts repository*/
         //Item1 remember start point this merged part
@@ -123,7 +122,7 @@ public class SortMaker : MonoBehaviour
                     dp.Pop();
 
                     if (bars[temp.Item1].transform.localScale.y > bars[temp.Item1 + 1].transform.localScale.y)
-                        Swap(temp.Item1, temp.Item1 + 1);
+                        Swap(bars, temp.Item1, temp.Item1 + 1);
 
                     StartCoroutine(MergeSort(second, leftStart, rightStart, index));
                 }
@@ -174,7 +173,7 @@ public class SortMaker : MonoBehaviour
 
                             if (rightStart >= listTemp.Count)
                             {
-                                Swap(listTemp[leftStart].Item2, index);
+                                Swap(bars, listTemp[leftStart].Item2, index);
 
                                 int tempData = listTemp[leftStart].Item2;
                                 listTemp[leftStart] = new Tuple<float, int>(listTemp[leftStart].Item1, listTemp[i].Item2);
@@ -185,7 +184,7 @@ public class SortMaker : MonoBehaviour
 
                             else if (leftStart >= temp.Item2 / 2 || listTemp[rightStart].Item1 < listTemp[leftStart].Item1)
                             {
-                                Swap(listTemp[rightStart].Item2, index);
+                                Swap(bars, listTemp[rightStart].Item2, index);
 
                                 int tempData = listTemp[rightStart].Item2;
                                 listTemp[rightStart] = new Tuple<float, int>(listTemp[rightStart].Item1, listTemp[i].Item2);
@@ -197,7 +196,7 @@ public class SortMaker : MonoBehaviour
 
                             else
                             {
-                                Swap(listTemp[leftStart].Item2, index);
+                                Swap(bars, listTemp[leftStart].Item2, index);
 
                                 int tempData = listTemp[leftStart].Item2;
                                 listTemp[leftStart] = new Tuple<float, int>(listTemp[leftStart].Item1, listTemp[i].Item2);
@@ -222,7 +221,7 @@ public class SortMaker : MonoBehaviour
 
                     if (dp.Count == 0)
                     {
-                        StartCoroutine(CheckArray(second));
+                        StartCoroutine(CheckArray(bars, second));
                     }
 
                     else StartCoroutine(MergeSort(second, leftStart, rightStart, index));
@@ -238,10 +237,11 @@ public class SortMaker : MonoBehaviour
 
     }
 
-    void BubbleSort(int barLenghtRange, float barIncerese)
+    void BubbleSort(int barLenghtRange, float barIncerese, float upperY = 0)
     {
         /*Generate Bars*/
-        SetUp(range, barIncerese);
+        List<GameObject> bars = new List<GameObject>();
+        SetUp(bars, range, barIncerese, upperY);
 
         /*Sorttring funtion*/
         IEnumerator BubbleSort(float second, int i = 0, int j = 0)
@@ -259,7 +259,7 @@ public class SortMaker : MonoBehaviour
                 changeColor.color = Color.red;
 
                 if (bars[j].transform.localScale.y > bars[j + 1].transform.localScale.y)
-                    Swap(j, j + 1);
+                    Swap(bars, j, j + 1);
 
                 changeColor = bars[j].GetComponent<SpriteRenderer>();
                 changeColor.color = Color.white;
@@ -278,7 +278,7 @@ public class SortMaker : MonoBehaviour
             }
 
             else
-                StartCoroutine(CheckArray(updateInterval));
+                StartCoroutine(CheckArray(bars, updateInterval));
         }
 
         /*Start sortting*/
